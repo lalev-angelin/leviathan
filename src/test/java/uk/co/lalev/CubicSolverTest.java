@@ -4,33 +4,59 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class CubicSolverTest {
         @Test
         public void testCubicSolver() {
             CubicSolver cubicSolver = new CubicSolver();
-            double A = 1;
-            double B = -6;
-            double C = 11;
-            double D = -6;
+            List<Double> result = cubicSolver.solveCubicForRealRoots(1, -6, 11, -6);
+            // Проверка на корените
+            assertEquals(3, result.size(), "Should have 3 real roots");
+            result.sort(Double::compareTo);
+            assertTrue(cubicSolver.withinEpsilonOf(1, result.get(0)));
+            assertTrue(cubicSolver.withinEpsilonOf(2, result.get(1)));
+            assertTrue(cubicSolver.withinEpsilonOf(3, result.get(2)));
 
-            List<Double> result = cubicSolver.solveCubic(A, B, C, D);
+            cubicSolver = new CubicSolver();
+            result = cubicSolver.solveCubicForRealRoots(1, 0, 0, 6);
+            // Проверка на корените
+            assertEquals(1, result.size(), "Should have 1 real root");
+            result.sort(Double::compareTo);
+            assertTrue(cubicSolver.withinEpsilonOf(-1.81712059283213, result.get(0)));
 
-        }
-     @Test
-        public void testComputeRadiusVectorLengthFromSphericalCoordinates() {
-            Ellipsoid ellipsoid = new Ellipsoid(1, 1, 1);
-            double phi = Math.PI / 4;
-            double lambda = Math.PI / 4;
-            double expected = 1.0; // Replace with the expected value
-            double result = ellipsoid.computeRadiusVectorLengthFromSphericalCoordinates(phi, lambda);
-            assertEquals(expected, result, 0.01);
+            cubicSolver = new CubicSolver();
+            result = cubicSolver.solveCubicForRealRoots(0, 1, 0, -6);
+            // Проверка на корените
+            assertEquals(2, result.size(), "Should have 2 real roots");
+            result.sort(Double::compareTo);
+            assertTrue(cubicSolver.withinEpsilonOf(-2.44948974278317, result.get(0)));
+            assertTrue(cubicSolver.withinEpsilonOf(2.44948974278317, result.get(1)));
+
+            cubicSolver = new CubicSolver();
+            result = cubicSolver.solveCubicForRealRoots(0, 0, 0, -6);
+            // Проверка на корените
+            assertEquals(0, result.size(), "Should have no real roots");
+
+            CubicSolver finalCubicSolver = cubicSolver;
+            assertThrows(ArithmeticException.class, () -> {
+                // Тест за изключение при всички числа като решения
+                finalCubicSolver.solveCubicForRealRoots(0, 0, 0, 0);
+            });
+
+            cubicSolver = new CubicSolver();
+            result = cubicSolver.solveCubicForRealRoots(1, 0, 1, -6);
+            // Проверка на корените
+            assertEquals(1, result.size(), "Should have 1 real roots");
+            result.sort(Double::compareTo);
+            assertTrue(cubicSolver.withinEpsilonOf(1.63436529301352, result.get(0)));
+
+            cubicSolver = new CubicSolver();
+            result = cubicSolver.solveCubicForRealRoots(1, 0, 0, 1);
+            // Проверка на корените
+            assertEquals(1, result.size(), "Should have 1 real roots");
+            result.sort(Double::compareTo);
+            assertTrue(cubicSolver.withinEpsilonOf(-1, result.get(0)));
         }
 }

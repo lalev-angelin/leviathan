@@ -6,49 +6,96 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CubicSolver {
-    public List<Double> solveCubic(double A, double B, double C, double D) {
-        double Delta0 = B * B - 3 * A * C;
-        double Delta1 = 2 * B * B * B - 9 * A * B * C + 27 * A * A * D;
-        Complex discriminant = Complex.ofCartesian(Delta1*Delta1 - 4 * Delta0 * Delta0 * Delta0, 0);
 
+    public static final double EPSILON = 1e-10;
+
+    public boolean withinEpsilonOf(double value1, double value2) {
+        return Math.abs(value1-value2) < EPSILON;
+    }
+
+    public List<Double> solveQuadraticForForRealRoots(double A, double B, double C) {
+        if (A == 0) {
+            if (B == 0) {
+                /* Линейно уравнение */
+                if (C==0) {
+                    /* Всички числа са решения */
+                    throw new ArithmeticException("All numbers are solutions");
+                } else {
+                    /* Няма решение */
+                    return new ArrayList<>();
+                }
+            } else {
+                /* Едно решение */
+                ArrayList<Double> result = new ArrayList<>();
+                result.add(-C / B);
+                return result;
+            }
+        }
+
+        double discriminant = B * B - 4 * A * C;
+        if (discriminant < 0) {
+            /* Няма реални корени */
+            return new ArrayList<>();
+        } else if (discriminant == 0) {
+            /* Eдно Двойно решение */
+            ArrayList<Double> results = new ArrayList<>();
+            results.add(-B / (2 * A));
+            return results;
+        } else {
+            /* Две различни решения */
+            double sqrtDiscriminant = Math.sqrt(discriminant);
+            ArrayList<Double> results = new ArrayList<>();
+            results.add((-B + sqrtDiscriminant) / (2 * A));
+            results.add((-B - sqrtDiscriminant) / (2 * A));
+            results.sort(Double::compareTo);
+            return results;
+        }
+    }
+
+    public List<Double> solveCubicForRealRoots(double A, double B, double C, double D) {
+        if (A == 0) {
+            // Линейно или квадратно уравнение
+            return solveQuadraticForForRealRoots(B, C, D);
+        }
+
+        Complex Delta0 = Complex.ofCartesian(B * B - 3 * A * C, 0);
+        Complex Delta1 = Complex.ofCartesian(2 * B * B * B - 9 * A * B * C + 27 * A * A * D, 0);
+        Complex discriminant = Delta1.multiply(Delta1)
+                   .subtract(Delta0.multiply(Delta0)
+                        .multiply(Delta0)
+                        .multiply(4)
+                   );
         Complex discriminantRoot = discriminant.sqrt();
 
-        if (Delta0==0 && Delta1==0) {
-            // All roots are real and equal
+        if (Delta0.getReal()==0 &&
+                Delta1.getReal()==0) {
+            /* Всички корени са равни и реални*/
             double root = -B / (3 * A);
-            System.out.println("Root: " + root);
-            return List.of(root, root, root);
-        } else if (Delta0 == 0) {
-            // Two roots are real and equal, one is complex
-            double root1 = -B / (3 * A);
-            double root2 = -B / (3 * A) + discriminantRoot.getReal() / (3 * A);
-            System.out.println("Root 1: " + root1);
-            System.out.println("Root 2: " + root2);
-            return List.of(root1, root2);
-        }
+            return List.of(root);
+        } else {
+            Complex C1 = Delta1.add(discriminantRoot).divide(2.0);
+            Complex C2 = Delta1.subtract(discriminantRoot).divide(2.0);
+            Complex CBest = C1;
 
-        Complex C1 = Complex.ofCartesian(Delta1, 0).add(discriminantRoot).divide(2.0);
-        Complex C2 = Complex.ofCartesian(Delta1, 0).subtract(discriminantRoot).divide(2.0);
-
-        List<Complex> C1Roots = C1.nthRoot(3);
-        List<Complex> C2Roots = C2.nthRoot(3);
-        C1Roots.addAll(C2Roots);
-
-        List<Double> results = new ArrayList<>();
-        // Convert complex roots to real roots, ignoring the imaginary part if it's negligible
-        for (Complex root : C1Roots) {
-            if (root.imag() < 0.0001 && root.imag() > -0.0001) {
-                root = Complex.ofCartesian(root.real(), 0);
+            if (withinEpsilonOf(C1.getReal(), 0) && withinEpsilonOf(C1.getImaginary(),0)) {
+                CBest= C2;
             }
-            results.add(root.getReal());
-        }
-        for (Complex root : C1Roots) {
-            if (root.imag()<0.0001 && root.imag()>-0.0001) {
-                root = Complex.ofCartesian(root.real(), 0);
-            }
-            results.add(root.getReal());
-        }
 
-      return results;
+            List<Complex> CRoots  = CBest.nthRoot(3);
+
+            // Извличаме само реалните корени
+            List<Double> results = new ArrayList<>();
+            for (Complex cRoot : CRoots) {
+                Complex newRoot =
+                cRoot.add(Delta0.divide(cRoot))
+                        .add(B)
+                        .divide(-3* A);
+                if (withinEpsilonOf(newRoot.getImaginary(), 0)) {
+                    results.add(newRoot.getReal());
+                }
+            }
+            results.sort(Double::compareTo);
+            return results;
+        }
     }
 }
